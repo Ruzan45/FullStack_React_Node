@@ -1,5 +1,4 @@
 import { db } from '../components/db.js';
-import { validationResult } from 'express-validator';
 export const getAll = async (req, res) => {
     await db.query("SELECT * FROM posts")
         .then((result) => {
@@ -14,6 +13,22 @@ export const getAll = async (req, res) => {
             console.log('Ошибка при запросе статей: ' + err);
         })
 }
+export const getLastTags = async (req, res) => {
+    await db.query("SELECT tags FROM posts LIMIT 5")
+        .then((result) => {
+            if (result.rowCount > 0) {
+                const tags = result.rows.map((obj) => obj.tags).flat().join(",").split(",").slice(0, 5);
+                res.status(200).json(tags)
+            } else {
+                res.status(400).json({ message: "Тэги не найдены" })
+            }
+        })
+        .catch((err) => {
+            res.status(500).json({ message: "Ошибка при выполнении запроса, повторите попытку позже" });
+            console.log('Ошибка при запросе статей: ' + err);
+        })
+}
+
 export const getOne = async (req, res) => {
     const post_id = req.params.id;
     await db.query("SELECT * FROM posts WHERE post_id ='" + post_id + "'")

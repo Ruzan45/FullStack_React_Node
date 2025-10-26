@@ -1,5 +1,6 @@
 import express from 'express'; //фреймворк для Node.js
 import multer from 'multer'; //библиотека для загрузки файлов
+import corse from 'cors';
 import { checkAuth } from './utils/checkAuth.js'; //проверяем авторизацию пользователя
 import { registerValidation, loginValidation, postCreateValidation, postUpdateValidation } from './validations/validations.js'
 import HandleValidationErrors from './utils/handleValidationErrors.js'
@@ -21,6 +22,7 @@ const storage = multer.diskStorage({ //настраиваем multer
 const upload = multer({ storage });
 
 app.use(express.json()); //учим express понимать json
+app.use(corse());
 app.use('/uploads', express.static('uploads')) //если придёт запрос uploads, тогда используй функцию static и проверь есть ли в этой папке этот файл
 
 app.listen(4444, (err) => {//запускаем сервер на локалхост
@@ -38,6 +40,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/posts', PostController.getAll);
+app.get('/tags', PostController.getLastTags);
 app.get('/posts/:id', PostController.getOne);
 app.get('/auth/me', checkAuth, UserController.getMe);
 
