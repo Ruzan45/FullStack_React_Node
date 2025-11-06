@@ -37,7 +37,15 @@ export const getOne = async (req, res) => {
                 const new_count = result.rows[0].views_count + 1; //т к мы посмотрели статью, то нужно добавить колличество просмотров
                 db.query("UPDATE posts SET views_count = '" + new_count + "' WHERE post_id ='" + post_id + "' RETURNING *")//RETURNING * возвращает всю обновлённую строку
                     .then((data) => {
-                        res.status(200).json(data.rows[0])
+                        const postData = data.rows[0];
+                        db.query("SELECT fullname, email, avatar FROM users WHERE user_id = '" + postData.user_id + "'")
+                            .then((data) => {
+                                const userData = data.rows[0];
+                                res.json(Object.assign(postData, userData)); //комбинируем 2 разных запроса в один объект и отправляем в ответ клиенту
+                            }).catch((err) => {
+                                res.status(400).json({ message: "Владелец статьи удалил аккаунт" })
+                                сonsole.log('Ошибка при запросе владельца статьи: ' + err);
+                            })
                     })
             } else {
                 res.status(400).json({ message: "Статья не найдена" })
@@ -53,7 +61,7 @@ export const remove = async (req, res) => {
     await db.query("DELETE FROM posts WHERE post_id ='" + post_id + "'")
         .then((result) => {
             if (result.rowCount === 1) {
-                res.status(200).json({ message: "Статья удалена" })
+                res.status(200).json({ post_id })
             } else {
                 res.status(400).json({ message: "Статья не найдена" })
             }
@@ -66,11 +74,10 @@ export const remove = async (req, res) => {
 }
 export const create = async (req, res) => {
     const values = [req.body.title, req.body.text, req.body.tags, req.body.image_url, req.userId]
-    await db.query("INSERT INTO posts (title, text, tags, image_url, user_id) VALUES ($1, $2, $3, $4, $5)", values)
-        .then(() => {
-            console.log('данные внесены');
-            res.json({
-                message: 'Данные внесены'// Отправляем в качестве POST ответа
+    await db.query("INSERT INTO posts (title, text, tags, image_url, user_id) VALUES ($1, $2, $3, $4, $5 ) RETURNING *", values)
+        .then((result) => {
+            res.json({ // Отправляем в качестве POST ответа
+                id: result.rows[0].post_id
             });
         })
         .catch((err) => {

@@ -19,7 +19,7 @@ const storage = multer.diskStorage({ //настраиваем multer
     },
 });
 
-const upload = multer({ storage });
+const upload = multer({ storage }); //
 
 app.use(express.json()); //учим express понимать json
 app.use(corse());
